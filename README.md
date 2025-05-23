@@ -1,4 +1,62 @@
 # SafeCircularBuffer
+
+Simple usage of SafeCircularBuffer 
+
+Example 2: Concurrent Usage (Sensor Data)
+This example simulates a sensor sending data to the buffer from one task while another task reads it, demonstrating thread safety.
+
+import Foundation
+
+// Create a SafeCircularBuffer to store sensor readings (Double)
+let sensorBuffer = SafeCircularBuffer<Double>(capacity: 3)
+
+// Simulate sensor sending data
+func simulateSensor() async {
+    let readings = [23.5, 24.0, 22.8, 25.1, 23.9]
+    for reading in readings {
+        if let overwritten = await sensorBuffer.push(reading) {
+            print("Overwrote: \(overwritten)")
+        } else {
+            print("Added: \(reading)")
+        }
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // Wait 1 second
+    }
+}
+
+// Simulate reading data
+func readSensorData() async {
+    for _ in 0..<3 {
+        if let value = await sensorBuffer.pop() {
+            print("Read: \(value)")
+        } else {
+            print("Buffer empty")
+        }
+        try? await Task.sleep(nanoseconds: 1_500_000_000) // Wait 1.5 seconds
+    }
+}
+
+// Run both tasks concurrently
+Task {
+    async let sensorTask = simulateSensor()
+    async let readerTask = readSensorData()
+    _ = await (sensorTask, readerTask)
+}
+
+
+Sample Output (order may vary due to concurrency):
+
+Added: 23.5
+Added: 24.0
+Added: 22.8
+Read: 23.5
+Overwrote: 23.5
+Read: 24.0
+Overwrote: 24.0
+Read: 22.8
+
+
+
+
 1. What is a Circular Buffer?
 A circular buffer (also called a ring buffer) is a fixed-size data structure that stores elements in a way that “wraps around” when it reaches its capacity. Imagine a fixed-length array where, after adding elements to the end, you start overwriting the oldest elements at the beginning. It’s like a conveyor belt: new items are added at one end, and old items are removed or overwritten at the other.
 Key Features of a Circular Buffer
