@@ -176,5 +176,11 @@ actor SafeCircularBuffer<T: Sendable> {
             try await action(element)
         }
     }
+    
+    // Add to SafeCircularBuffer
+    var capacity: Int {
+        buffer.capacity
+    }
+
 
 }
