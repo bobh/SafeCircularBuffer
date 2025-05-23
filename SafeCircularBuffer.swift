@@ -4,6 +4,32 @@
 //
 //  Created by bobh on 5/22/25.
 //
+/*
+ ## Suggested Enhancements
+
+ ```swift
+ // Add to SafeCircularBuffer
+ var capacity: Int {
+     buffer.capacity
+ }
+
+ // Fix pushBatch to match write behavior
+ func pushBatch(_ elements: [T]) -> [T?] {
+     var overwritten: [T?] = []
+     for element in elements {
+         overwritten.append(buffer.write(element))
+     }
+     return overwritten
+ }
+
+ // Consider async iteration
+ func forEach(_ action: (T) async throws -> Void) async rethrows {
+     let snapshot = buffer.toArray()
+     for element in snapshot {
+         try await action(element)
+     }
+ }
+*/
 
 // MARK: - Circular Buffer
 struct CircularBuffer<T: Sendable>: Sendable {
@@ -143,4 +169,12 @@ actor SafeCircularBuffer<T: Sendable> {
             _ = buffer.write(elements[i])
         }
     }
+    
+    func forEach(_ action: (T) async throws -> Void) async rethrows {
+        let snapshot = buffer.toArray()
+        for element in snapshot {
+            try await action(element)
+        }
+    }
+
 }
